@@ -31,6 +31,9 @@ In this task, you’ll create and configure User Pool from AWS Management Consol
 Automating the Configuration using CloudFormation Template
 ----------------------------------------------------------
 
+Follow the steps one by one in this section, and/or alternately, you can leverage the below cloud formation template 
+to automate the Cognito Configuration
+
 Alternately, you can leverage the below cloud formation template to automate the
 Cognito Configuration
 
