@@ -34,7 +34,7 @@ Automating the Configuration using CloudFormation Template
 Alternately, you can leverage the below cloud formation template to automate the
 Cognito Configuration
 
-![](media/image1.png)
+![](meta/images/image1.png)
 
 #### Step 1: Open the AWS Console, navigate to the Cognito UI and click Manage User Pools
 
