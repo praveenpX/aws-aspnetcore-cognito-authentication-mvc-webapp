@@ -173,47 +173,27 @@ Microsot.AspNetCore.Authentication.OpenIdConnect
 
 ```
 {
-
-"Logging": {
-
-"LogLevel": {
-
-"Default": "Warning"
-
+   "Logging":{
+      "LogLevel":{
+         "Default":"Warning"
+      }
+   },
+   "AllowedHosts":"\\*",
+   "Authentication":{
+      "Cognito":{
+         "ClientId":"\\<app client id from AWS Cognito\\>",
+         "IncludeErrorDetails":true,
+         "MetadataAddress":"https://cognito-idp.\\<your region\\>.amazonaws.com/\\<your-pool id\\>/.well-known/openid-configuration",
+         "RequireHttpsMetadata":false,
+         "ResponseType":"code",
+         "SaveToken":true,
+         "TokenValidationParameters":{
+            "ValidateIssuer":true
+         }
+      }
+   }
 }
 
-},
-
-"AllowedHosts": "\*",
-
-"Authentication": {
-
-"Cognito": {
-
-"ClientId": "\<app client id from AWS Cognito\>",
-
-"IncludeErrorDetails": true,
-
-"MetadataAddress": "https://cognito-idp.\<your region\>.amazonaws.com/\<your
-pool id\>/.well-known/openid-configuration",
-
-"RequireHttpsMetadata": false,
-
-"ResponseType": "code",
-
-"SaveToken": true,
-
-"TokenValidationParameters": {
-
-"ValidateIssuer": true
-
-}
-
-}
-
-}
-
-}
 
 ```
 
@@ -250,35 +230,33 @@ public void ConfigureServices(IServiceCollection services)
 
 {
 
-services.AddControllersWithViews();
+	services.AddControllersWithViews();
 
-services.AddAuthentication(options =\>
+	services.AddAuthentication(options = \ >
 
-{
+	{
 
-options.DefaultAuthenticateScheme =
-CookieAuthenticationDefaults.AuthenticationScheme;
+		options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+		options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+		options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
 
-})
+	})
 
-.AddCookie()
+	.AddCookie()
 
-.AddOpenIdConnect(options =\>
+	.AddOpenIdConnect(options = \ >
 
-{
+	{
 
-options.ResponseType = Configuration["Authentication:Cognito:ResponseType"];
+		options.ResponseType = Configuration["Authentication:Cognito:ResponseType"];
 
-options.MetadataAddress =
-Configuration["Authentication:Cognito:MetadataAddress"];
+		options.MetadataAddress = Configuration["Authentication:Cognito:MetadataAddress"];
 
-options.ClientId = Configuration["Authentication:Cognito:ClientId"];
+		options.ClientId = Configuration["Authentication:Cognito:ClientId"];
 
-});
+	});
 
 }
 
@@ -291,36 +269,36 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 
 {
 
-if (env.IsDevelopment())
+	if (env.IsDevelopment())
 
-{
+	{
 
-app.UseDeveloperExceptionPage();
+		app.UseDeveloperExceptionPage();
 
-}
+	}
 
-else
+	else
 
-{
+	{
 
-app.UseExceptionHandler("/Home/Error");
+		app.UseExceptionHandler("/Home/Error");
 
-// The default HSTS value is 30 days. You may want to change this for production
-scenarios, see https://aka.ms/aspnetcore-hsts.
+		// The default HSTS value is 30 days. You may want to change this for production
+		scenarios,
+		see https: //aka.ms/aspnetcore-hsts.
+		app.UseHsts();
 
-app.UseHsts();
+	}
 
-}
+	app.UseHttpsRedirection();
 
-app.UseHttpsRedirection();
+	app.UseStaticFiles();
 
-app.UseStaticFiles();
+	app.UseRouting();
 
-app.UseRouting();
+	app.UseAuthentication();
 
-app.UseAuthentication();
-
-app.UseAuthorization();
+	app.UseAuthorization();
 
 }
 
