@@ -34,7 +34,108 @@ Automating the Configuration using CloudFormation Template
 Alternately, you can leverage the below cloud formation template to automate the
 Cognito Configuration
 
-![](meta/images/image1.png)
+```
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Creates and configures cognito resources for the demo application.",
+  "Parameters": {
+    "AuthName": {
+      "Type": "String",
+      "Description": "Unique Auth Name for Cognito Resources"
+    },
+    "CallbackUrl": {
+      "Type": "String",
+      "Description": "Enter your callback URLS that you will include in your sign in and sign out requests."
+    },
+    "SignoutUrl": {
+      "Type": "String",
+      "Description": "Enter your callback URLS that you will include in your sign in and sign out requests"
+    }
+  },
+  "Resources": {
+    "DemoUserPool": {
+      "Type": "AWS::Cognito::UserPool",
+      "Properties": {
+        "UserPoolName": "NetCoreDemoAppUsersv1"
+      }
+    },
+    "DemoUserPoolClient": {
+      "Type": "AWS::Cognito::UserPoolClient",
+      "Properties": {
+        "ClientName": "NetCoreDemoAppClientv1",
+        "ExplicitAuthFlows": [
+          "ALLOW_USER_PASSWORD_AUTH",
+          "ALLOW_REFRESH_TOKEN_AUTH"
+        ],
+        "GenerateSecret": false,
+        "RefreshTokenValidity": "30",
+        "UserPoolId": {"Ref": "DemoUserPool"},
+        "SupportedIdentityProviders": [
+          "COGNITO"
+        ],
+        "AllowedOAuthFlows": [
+          "code"
+        ],
+        "AllowedOAuthScopes": [
+          "email",
+          "openid",
+          "profile"
+        ],
+        "CallbackURLs": [
+          {
+            "Ref": "CallbackUrl"
+          }
+        ],
+        "LogoutURLs": [
+          {
+            "Ref": "SignoutUrl"
+          }
+        ]
+      }
+    },
+    "DemoUserPoolDomain": {
+      "Type": "AWS::Cognito::UserPoolDomain",
+      "Properties": {
+        "Domain": { "Fn::Sub": "${AuthName}-demoappclient" },
+        "UserPoolId": {
+          "Ref": "DemoUserPool"
+        }
+      }
+    }
+  },
+      "Outputs": {
+        "UserPoolId": {
+          "Description": "Id of api user pool",
+          "Value": {
+            "Ref": "DemoUserPool"
+          },
+          "Export": {
+            "Name": "local-UserPoolId"
+          }
+        },
+        "UserPoolClientId": {
+          "Description": "Id of api user pool client",
+          "Value": {
+            "Ref": "DemoUserPoolClient"
+          },
+          "Export": {
+            "Name": "local-UserPoolClientId"
+          }
+        },
+        "UserPoolDomain": {
+          "Description": "UserPoolDomain name",
+          "Value": {
+            "Ref": "DemoUserPoolDomain"
+          },
+          "Export": {
+            "Name": "local-UserPoolDomain"
+          }
+        },
+        "DemoRegion" : { "Description": "AWS Region name", "Value" : { "Ref" : "AWS::Region" } }
+      }
+}
+
+```
 
 #### Step 1: Open the AWS Console, navigate to the Cognito UI and click Manage User Pools
 
