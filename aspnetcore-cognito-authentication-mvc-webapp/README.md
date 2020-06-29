@@ -236,7 +236,7 @@ Make a note of the following:
 
 -   Sign Out Url
 
--   Cognito Domain Name
+-   Cognito Domain (fully qualified cognito domain url)
 
 Task 5: Create .NET Core ASP.NET MVC Web Application
 ----------------------------------------------------
@@ -296,7 +296,7 @@ Microsot.AspNetCore.Authentication.OpenIdConnect
       "TokenValidationParameters": {
         "ValidateIssuer": true
       },
-      "AppSignOutUrl": "\\<sign out url goes here \\>",
+      "AppSignOutUrl": "\\<sign out relative url goes here \\>",
       "CognitoDomain": "\\<cognito domain goes here>\\"
     }
    }
