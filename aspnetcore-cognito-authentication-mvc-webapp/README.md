@@ -37,6 +37,7 @@ to automate the Cognito Configuration
 
 
 ```
+
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Creates and configures cognito resources for the demo application.",
@@ -51,7 +52,7 @@ to automate the Cognito Configuration
     },
     "SignoutUrl": {
       "Type": "String",
-      "Description": "Enter your callback URLS that you will include in your sign in and sign out requests"
+      "Description": "Enter your sign out URLS that you will include in your sign in and sign out requests"
     }
   },
   "Resources": {
