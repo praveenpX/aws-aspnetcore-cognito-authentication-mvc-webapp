@@ -234,6 +234,8 @@ Make a note of the following:
 
 -   Callback Url
 
+-   Sign Out Url
+
 -   Cognito Domain Name
 
 Task 5: Create .NET Core ASP.NET MVC Web Application
@@ -275,6 +277,7 @@ Microsot.AspNetCore.Authentication.OpenIdConnect
 #### Step 17: In the appsettings.json file, under the AuthenticationCognito section, provide values as below.
 
 ```
+
 {
    "Logging":{
       "LogLevel":{
@@ -283,19 +286,23 @@ Microsot.AspNetCore.Authentication.OpenIdConnect
    },
    "AllowedHosts":"\\*",
    "Authentication":{
-      "Cognito":{
-         "ClientId":"\\<app client id from AWS Cognito\\>",
-         "IncludeErrorDetails":true,
-         "MetadataAddress":"https://cognito-idp.\\<your region\\>.amazonaws.com/\\<your-pool id\\>/.well-known/openid-configuration",
-         "RequireHttpsMetadata":false,
-         "ResponseType":"code",
-         "SaveToken":true,
-         "TokenValidationParameters":{
-            "ValidateIssuer":true
-         }
-      }
+    "Cognito": {
+      "ClientId": "\\<app client id from AWS Cognito\\>",
+      "IncludeErrorDetails": true,
+      "MetadataAddress": "https://cognito-idp.\\<your region\\>.amazonaws.com/\\<your-pool id\\>/.well-known/openid-configuration",
+      "RequireHttpsMetadata": false,
+      "ResponseType": "code",
+      "SaveToken": true,
+      "TokenValidationParameters": {
+        "ValidateIssuer": true
+      },
+      "AppSignOutUrl": "\\<sign out url goes here \\>",
+      "CognitoDomain": "\\<cognito domain goes here>\\"
+    }
    }
 }
+
+
 
 
 ```
@@ -329,81 +336,89 @@ Refer to the configuration details below.
 
 #### Step 18: OpenID Connect Configuration
 ```
-public void ConfigureServices(IServiceCollection services)
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddControllersWithViews();
 
-{
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            })
+            .AddCookie()
+            .AddOpenIdConnect(options =>
+            {
+                options.ResponseType = Configuration["Authentication:Cognito:ResponseType"];
+                options.MetadataAddress = Configuration["Authentication:Cognito:MetadataAddress"];
+                options.ClientId = Configuration["Authentication:Cognito:ClientId"];
+                options.Events = new OpenIdConnectEvents()
+                {
+                    OnRedirectToIdentityProviderForSignOut = OnRedirectToIdentityProviderForSignOut
+                };
+            });
+        }
 
-	services.AddControllersWithViews();
+        private Task OnRedirectToIdentityProviderForSignOut(RedirectContext context)
+        {
+            context.ProtocolMessage.Scope = "openid";
+            context.ProtocolMessage.ResponseType = "code";
 
-	services.AddAuthentication(options = \ >
+            var cognitoDomain = Configuration["Authentication:Cognito:CognitoDomain"];
 
-	{
+            var clientId = Configuration["Authentication:Cognito:ClientId"];
 
-		options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            var logoutUrl = $"{context.Request.Scheme}://{context.Request.Host}{Configuration["Authentication:Cognito:AppSignOutUrl"]}";
 
-		options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            context.ProtocolMessage.IssuerAddress = $"{cognitoDomain}/logout?client_id={clientId}&logout_uri={logoutUrl}&redirect_uri={logoutUrl}";
 
-		options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            // delete cookies
+            context.Properties.Items.Remove(CookieAuthenticationDefaults.AuthenticationScheme);
+            // close openid session
+            context.Properties.Items.Remove(OpenIdConnectDefaults.AuthenticationScheme);
 
-	})
-
-	.AddCookie()
-
-	.AddOpenIdConnect(options = \ >
-
-	{
-
-		options.ResponseType = Configuration["Authentication:Cognito:ResponseType"];
-
-		options.MetadataAddress = Configuration["Authentication:Cognito:MetadataAddress"];
-
-		options.ClientId = Configuration["Authentication:Cognito:ClientId"];
-
-	});
-
-}
+            return Task.CompletedTask;
+        }
 
 ```
 #### Step 19: Authentication Middleware Configuration
 
 ```
 
-public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
-{
+            app.UseRouting();
 
-	if (env.IsDevelopment())
+            app.UseAuthentication();
+            app.UseAuthorization();
 
-	{
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
+            name: "products",
+            pattern: "products/{action}/{id?}",
+            defaults: new { controller = "Products", action = "Index" });
 
-		app.UseDeveloperExceptionPage();
-
-	}
-
-	else
-
-	{
-
-		app.UseExceptionHandler("/Home/Error");
-
-		// The default HSTS value is 30 days. You may want to change this for production
-		scenarios,
-		see https: //aka.ms/aspnetcore-hsts.
-		app.UseHsts();
-
-	}
-
-	app.UseHttpsRedirection();
-
-	app.UseStaticFiles();
-
-	app.UseRouting();
-
-	app.UseAuthentication();
-
-	app.UseAuthorization();
-
-}
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
+        }
 
 ```
 
