@@ -445,6 +445,17 @@ Task 7: Test the application
 
 ![](meta/images/image21.png)
 
+Once you've logged in, you can view some of the attributes of the logged in user as below
+
+![](meta/images/image21-1.png)
+
+
+And also test for logout feature (which will redirect you to the home page after you click logout link in the top nav)
+
+![](meta/images/image21-2.png)
+
+And you can view and manage all the users from the aws console
+
 #### Step 25: You can view all the users in Amazon Cognito as shown below.
 
 ![](meta/images/image22.png)
