@@ -33,13 +33,17 @@ namespace aspnetcorewebapp
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
             })
-        .AddCookie()
-        .AddOpenIdConnect(options =>
-        {
-            options.ResponseType = Configuration["Authentication:Cognito:ResponseType"];
-            options.MetadataAddress = Configuration["Authentication:Cognito:MetadataAddress"];
-            options.ClientId = Configuration["Authentication:Cognito:ClientId"];
-        });
+            .AddCookie()
+            .AddOpenIdConnect(options =>
+            {
+                options.ResponseType = Configuration["Authentication:Cognito:ResponseType"];
+                options.MetadataAddress = Configuration["Authentication:Cognito:MetadataAddress"];
+                options.ClientId = Configuration["Authentication:Cognito:ClientId"];
+                options.Events = new OpenIdConnectEvents()
+                {
+                    OnRedirectToIdentityProviderForSignOut = OnRedirectToIdentityProviderForSignOut
+                };
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -74,6 +78,27 @@ namespace aspnetcorewebapp
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+        }
+
+        private Task OnRedirectToIdentityProviderForSignOut(RedirectContext context)
+        {
+            context.ProtocolMessage.Scope = "openid";
+            context.ProtocolMessage.ResponseType = "code";
+
+            var cognitoDomain = Configuration["Authentication:Cognito:CognitoDomain"];
+
+            var clientId = Configuration["Authentication:Cognito:ClientId"];
+
+            var logoutUrl = $"{context.Request.Scheme}://{context.Request.Host}{Configuration["Authentication:Cognito:AppSignOutUrl"]}";
+
+            context.ProtocolMessage.IssuerAddress = $"{cognitoDomain}/logout?client_id={clientId}&logout_uri={logoutUrl}&redirect_uri={logoutUrl}";
+
+            // delete cookies
+            context.Properties.Items.Remove(CookieAuthenticationDefaults.AuthenticationScheme);
+            // close openid session
+            context.Properties.Items.Remove(OpenIdConnectDefaults.AuthenticationScheme);
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -30,6 +30,12 @@
                     </ul>
                 </div>
             </div>
+            @{
+                if (User.Identity.IsAuthenticated)
+                {
+                    @:<div><a class="nav-link text-dark" href="/externalauthentication/signout">LogOut</a></div>
+                }
+            }
         </nav>
     </header>
     <div class="container">
